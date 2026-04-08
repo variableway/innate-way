@@ -17,3 +17,11 @@
   - 比如https://github.com/tobi/qmd这个项目
   - https://github.com/milla-jovovich/mempalace.git
 情分析一下当前的目录结构有哪些需要改善的,从这个问题开始需要执行 github-workflow了，我已经再innate-way建立好仓库了
+
+## Task 2： 请先分析当前做的项目有哪些可以形成Skill的
+
+- 目前我能想到的是前端相关的项目，我想统一使用：
+  - tarui 这个项目
+  - nextjs，typescript，tailwindcss，shadcn-ui
+  - [innate-executable](../innate-executable/) 这个项目的UI Client我比较喜欢，希望把这个项目做成一个Skill 主要针对的是前端相关的使用的技能
+  - 其他你可以给我完整扫描之后给出你的答案，做一个当前skill总结的分析报告
