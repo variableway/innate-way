@@ -1,0 +1,27 @@
+name: conversation-recorder
+version: 1.0.0
+description: "捕获和记录 AI 对话过程"
+type: hook
+
+triggers:
+  - before_request
+  - after_response
+
+config:
+  capture_dir: "./docs/capture-tui/sessions"
+  capture_thinking: true
+  capture_skills: true
+  max_session_duration: 3600
+  auto_start: false
+
+hooks:
+  before_request:
+    action: record_input
+    params:
+      capture_context: true
+  
+  after_response:
+    action: record_output
+    params:
+      capture_thinking: true
+      capture_skills: true
