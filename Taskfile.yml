@@ -1,0 +1,286 @@
+# Taskfile for Capture TUI
+# Build automation for both Go and Python versions
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GO_DIR: capture-tui-go
+  PYTHON_DIR: .
+  DIST_DIR: dist
+  VERSION: '1.0.0'
+
+tasks:
+  # ============================================================================
+  # Setup Tasks
+  # ============================================================================
+  
+  setup:
+    desc: Setup development environment
+    cmds:
+      - task: setup:go
+      - task: setup:python
+
+  setup:go:
+    desc: Setup Go environment
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go mod download
+      - go mod tidy
+    sources:
+      - go.mod
+      - go.sum
+
+  setup:python:
+    desc: Setup Python environment
+    cmds:
+      - uv pip install -e ".[dev]"
+    sources:
+      - pyproject.toml
+      - requirements.txt
+
+  # ============================================================================
+  # Build Go Application
+  # ============================================================================
+  
+  build:go:
+    desc: Build Go application for current platform
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - mkdir -p ../{{.DIST_DIR}}
+      - go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture{{.EXT}} ./cmd/capture
+    vars:
+      EXT:
+        sh: '{{if eq OS "windows"}}.exe{{end}}'
+
+  build:go:all:
+    desc: Build Go application for all platforms (Windows, macOS, Linux)
+    cmds:
+      - task: build:go:windows
+      - task: build:go:macos
+      - task: build:go:linux
+
+  build:go:windows:
+    desc: Build Go application for Windows
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - mkdir -p ../{{.DIST_DIR}}
+      - GOOS=windows GOARCH=amd64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-windows-amd64.exe ./cmd/capture
+      - GOOS=windows GOARCH=arm64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-windows-arm64.exe ./cmd/capture
+
+  build:go:macos:
+    desc: Build Go application for macOS
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - mkdir -p ../{{.DIST_DIR}}
+      - GOOS=darwin GOARCH=amd64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-darwin-amd64 ./cmd/capture
+      - GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-darwin-arm64 ./cmd/capture
+
+  build:go:linux:
+    desc: Build Go application for Linux
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - mkdir -p ../{{.DIST_DIR}}
+      - GOOS=linux GOARCH=amd64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-linux-amd64 ./cmd/capture
+      - GOOS=linux GOARCH=arm64 go build -ldflags "-s -w -X main.Version={{.VERSION}}" -o ../{{.DIST_DIR}}/capture-linux-arm64 ./cmd/capture
+
+  # ============================================================================
+  # Build Python Application
+  # ============================================================================
+  
+  build:python:
+    desc: Build Python CLI application for current platform
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - pyinstaller --clean --onefile --name capture-python scripts/capture-python.spec
+    sources:
+      - capture_tui/**/*.py
+      - pyproject.toml
+
+  build:python:all:
+    desc: Build Python application for all platforms (requires Docker)
+    cmds:
+      - task: build:python:windows
+      - task: build:python:macos
+      - task: build:python:linux
+
+  build:python:windows:
+    desc: Build Python application for Windows using Docker
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - docker run --rm -v "$PWD:/src" -w /src ftrvxmtrx/pyinstaller-windows pyinstaller --clean --onefile --name capture-python-windows scripts/capture-python.spec
+
+  build:python:macos:
+    desc: Build Python application for macOS
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - pyinstaller --clean --onefile --name capture-python-macos scripts/capture-python.spec
+
+  build:python:linux:
+    desc: Build Python application for Linux using Docker
+    cmds:
+      - mkdir -p {{.DIST_DIR}}
+      - docker run --rm -v "$PWD:/src" -w /src ftrvxmtrx/pyinstaller-linux pyinstaller --clean --onefile --name capture-python-linux scripts/capture-python.spec
+
+  # ============================================================================
+  # Package Tasks
+  # ============================================================================
+  
+  package:
+    desc: Package both Go and Python applications
+    cmds:
+      - task: build:go:all
+      - task: build:python
+      - task: package:compress
+
+  package:compress:
+    desc: Compress built binaries
+    dir: '{{.DIST_DIR}}'
+    cmds:
+      - tar -czf capture-darwin-amd64-{{.VERSION}}.tar.gz capture-darwin-amd64
+      - tar -czf capture-darwin-arm64-{{.VERSION}}.tar.gz capture-darwin-arm64
+      - tar -czf capture-linux-amd64-{{.VERSION}}.tar.gz capture-linux-amd64
+      - tar -czf capture-linux-arm64-{{.VERSION}}.tar.gz capture-linux-arm64
+      - zip capture-windows-amd64-{{.VERSION}}.zip capture-windows-amd64.exe
+      - zip capture-windows-arm64-{{.VERSION}}.zip capture-windows-arm64.exe
+    platforms: [linux, darwin]
+
+  # ============================================================================
+  # Test Tasks
+  # ============================================================================
+  
+  test:
+    desc: Run all tests
+    cmds:
+      - task: test:go
+      - task: test:python
+
+  test:go:
+    desc: Run Go tests
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go test -v ./...
+
+  test:go:bdd:
+    desc: Run Go BDD tests with Ginkgo
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - ginkgo -v ./test/
+
+  test:python:
+    desc: Run Python tests
+    cmds:
+      - pytest tests/ -v
+
+  test:python:coverage:
+    desc: Run Python tests with coverage
+    cmds:
+      - pytest tests/ --cov=capture_tui --cov-report=html --cov-report=term
+
+  # ============================================================================
+  # Lint Tasks
+  # ============================================================================
+  
+  lint:
+    desc: Run all linters
+    cmds:
+      - task: lint:go
+      - task: lint:python
+
+  lint:go:
+    desc: Run Go linters
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go fmt ./...
+      - go vet ./...
+      - golangci-lint run || true
+
+  lint:python:
+    desc: Run Python linters
+    cmds:
+      - black --check capture_tui/ || true
+      - ruff check capture_tui/ || true
+      - mypy capture_tui/ || true
+
+  # ============================================================================
+  # Clean Tasks
+  # ============================================================================
+  
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -rf {{.DIST_DIR}}/
+      - rm -rf build/
+      - rm -rf *.spec
+      - find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+      - find . -name "*.pyc" -delete 2>/dev/null || true
+
+  clean:all:
+    desc: Clean all artifacts including Go and Python caches
+    cmds:
+      - task: clean
+      - rm -rf .venv/
+      - rm -rf .pytest_cache/
+      - rm -rf .mypy_cache/
+      - rm -rf htmlcov/
+      - cd {{.GO_DIR}} && go clean -cache
+
+  # ============================================================================
+  # Install Tasks
+  # ============================================================================
+  
+  install:go:
+    desc: Install Go application to system
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go install -ldflags "-s -w -X main.Version={{.VERSION}}" ./cmd/capture
+
+  install:python:
+    desc: Install Python application to system
+    cmds:
+      - uv pip install -e .
+
+  # ============================================================================
+  # Release Tasks
+  # ============================================================================
+  
+  release:
+    desc: Create release build
+    cmds:
+      - task: clean
+      - task: test
+      - task: lint
+      - task: package
+      - echo "Release {{.VERSION}} built successfully in {{.DIST_DIR}}/"
+
+  # ============================================================================
+  # Development Tasks
+  # ============================================================================
+  
+  dev:go:
+    desc: Run Go application in development mode
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go run ./cmd/capture --help
+
+  dev:python:
+    desc: Run Python application in development mode
+    cmds:
+      - capture --help
+
+  fmt:
+    desc: Format all code
+    cmds:
+      - task: fmt:go
+      - task: fmt:python
+
+  fmt:go:
+    desc: Format Go code
+    dir: '{{.GO_DIR}}'
+    cmds:
+      - go fmt ./...
+
+  fmt:python:
+    desc: Format Python code
+    cmds:
+      - black capture_tui/
