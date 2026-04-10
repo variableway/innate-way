@@ -243,15 +243,31 @@ tasks:
   # ============================================================================
   # Release Tasks
   # ============================================================================
-  
+
   release:
-    desc: Create release build
+    desc: Build all binaries and collect into release/ folder
+    cmds:
+      - task: clean
+      - task: build:go:all
+      - task: release:copy
+
+  release:copy:
+    desc: Copy all built binaries into release/ folder
+    cmds:
+      - mkdir -p release
+      - cp {{.DIST_DIR}}/capture-* release/
+      - echo "All binaries copied to release/"
+      - ls -lh release/
+
+  release:full:
+    desc: "Full release: clean, test, lint, build, package into release/"
     cmds:
       - task: clean
       - task: test
       - task: lint
-      - task: package
-      - echo "Release {{.VERSION}} built successfully in {{.DIST_DIR}}/"
+      - task: build:go:all
+      - task: release:copy
+      - echo "Release {{.VERSION}} built successfully in release/"
 
   # ============================================================================
   # Development Tasks

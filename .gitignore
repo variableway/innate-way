@@ -146,3 +146,6 @@ custom-ideas/
 # Go specific (for capture-tui-go/)
 capture-tui-go/capture
 capture-tui-go/*.exe
+
+# Release binaries
+release/
