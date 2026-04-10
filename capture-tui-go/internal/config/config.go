@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -255,6 +256,24 @@ func (c *Config) createIndex() error {
 
 	indexPath := filepath.Join(c.Storage.RootDir, ".capture", "index.json")
 	return os.WriteFile(indexPath, []byte(index), 0644)
+}
+
+
+type contextKey string
+
+const configKey contextKey = "config"
+
+// WithConfig stores config in context
+func WithConfig(ctx context.Context, cfg *Config) context.Context {
+	return context.WithValue(ctx, configKey, cfg)
+}
+
+// FromConfig retrieves config from context
+func FromConfig(ctx context.Context) *Config {
+	if cfg, ok := ctx.Value(configKey).(*Config); ok {
+		return cfg
+	}
+	return DefaultConfig()
 }
 
 // RootDir returns the absolute root directory
