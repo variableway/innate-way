@@ -23,9 +23,11 @@ app = typer.Typer(
 # 创建子命令组
 categories_app = typer.Typer(help="分类管理")
 session_app = typer.Typer(help="会话管理")
+tutorial_app = typer.Typer(help="Executable tutorial generator")
 
 app.add_typer(categories_app, name="categories")
 app.add_typer(session_app, name="session")
+app.add_typer(tutorial_app, name="tutorial")
 
 
 # 全局选项回调
@@ -429,3 +431,165 @@ def stats(
 
 if __name__ == "__main__":
     app()
+
+
+# --- Tutorial subcommands ---
+
+@tutorial_app.command("generate")
+def tutorial_generate(
+    ctx: typer.Context,
+    source: str = typer.Argument(..., help="URL, file path, or text content"),
+    template: str = typer.Option("md_script", "--template", "-t",
+        help="Output template: md_script, md_only, script_only"),
+    output_dir: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Output directory"),
+    review: bool = typer.Option(
+        False, "--review", help="Enable human review before final output"),
+    no_claude: bool = typer.Option(
+        False, "--no-claude", help="Disable Claude-assisted stages"),
+    verbose: bool = typer.Option(
+        False, "--verbose", "-v", help="Show detailed stage progress"),
+):
+    """Generate an executable tutorial from a URL, file, or text."""
+    from capture_tui.tutorial.generator import TutorialGenerator
+
+    cfg = ctx.obj["config"]
+    gen = TutorialGenerator(cfg.tutorial)
+
+    try:
+        tutorial = gen.generate(
+            source=source,
+            template=template,
+            output_dir=str(output_dir) if output_dir else None,
+            review=review,
+            claude_enabled=not no_claude,
+        )
+
+        typer.echo(f"Generated tutorial: {tutorial.title}")
+        typer.echo(f"  ID: {tutorial.id}")
+        typer.echo(f"  Slug: {tutorial.slug}")
+        typer.echo(f"  Code blocks: {len(tutorial.code_blocks)}")
+        typer.echo(f"  Scripts: {len(tutorial.scripts)}")
+        if tutorial.source_url:
+            typer.echo(f"  Source: {tutorial.source_url}")
+
+    except Exception as e:
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(1)
+
+
+@tutorial_app.command("batch")
+def tutorial_batch(
+    ctx: typer.Context,
+    batch_file: Path = typer.Argument(...,
+        help="JSON file with sources to process"),
+    template: str = typer.Option("md_script", "--template", "-t"),
+    output_dir: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="Output base directory"),
+    workers: int = typer.Option(4, "--workers", "-w",
+        help="Number of parallel workers"),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Show what would be processed"),
+):
+    """Batch generate tutorials from a JSON file."""
+    import json
+    from capture_tui.pipeline.queue import Job
+    from capture_tui.tutorial.generator import TutorialGenerator
+
+    cfg = ctx.obj["config"]
+
+    with open(batch_file, "r", encoding="utf-8") as f:
+        sources = json.load(f)
+
+    if dry_run:
+        typer.echo(f"Would process {len(sources)} sources:")
+        for s in sources:
+            src = s if isinstance(s, str) else s.get("source", "")
+            typer.echo(f"  - {src[:80]}")
+        return
+
+    gen = TutorialGenerator(cfg.tutorial)
+    result = gen.generate_batch(
+        sources=sources,
+        template=template,
+        output_dir=str(output_dir) if output_dir else None,
+        max_workers=workers,
+    )
+
+    typer.echo(f"Batch complete: {result.succeeded}/{result.total} succeeded")
+    if result.errors:
+        for err in result.errors:
+            typer.echo(f"  Error: {err}", err=True)
+
+
+@tutorial_app.command("queue")
+def tutorial_queue(
+    ctx: typer.Context,
+    action: str = typer.Argument("status",
+        help="Queue action: status, retry, clear"),
+):
+    """Manage the tutorial job queue."""
+    from capture_tui.pipeline.queue import JobQueue, JobStatus
+
+    cfg = ctx.obj["config"]
+    queue_dir = cfg.tutorial.queue_dir or f"{cfg.tutorial.output_dir}/.tutorial"
+    queue = JobQueue(queue_dir)
+
+    if action == "status":
+        jobs = queue.list_jobs()
+        if not jobs:
+            typer.echo("Queue is empty")
+            return
+
+        from rich.table import Table
+        from rich.console import Console
+        console = Console()
+        table = Table(title="Tutorial Job Queue")
+        table.add_column("ID", style="cyan", overflow="fold")
+        table.add_column("Status", style="green")
+        table.add_column("Source", style="yellow", overflow="fold")
+        table.add_column("Created", style="dim")
+
+        for j in jobs[:20]:
+            table.add_row(
+                j.id[:20],
+                j.status,
+                j.input_ref[:50],
+                j.created_at[:19],
+            )
+        console.print(table)
+
+    elif action == "clear":
+        queue.clear()
+        typer.echo("Cleared completed/failed jobs")
+
+    else:
+        typer.echo(f"Unknown action: {action}", err=True)
+        raise typer.Exit(1)
+
+
+@tutorial_app.command("templates")
+def tutorial_templates(
+    ctx: typer.Context,
+    action: str = typer.Argument("list",
+        help="Template action: list, show"),
+    name: Optional[str] = typer.Argument(None, help="Template name"),
+):
+    """List or show tutorial templates."""
+    from capture_tui.tutorial.templates import TEMPLATES
+
+    if action == "list":
+        for tname, cls in TEMPLATES.items():
+            t = cls()
+            typer.echo(f"  {tname}: outputs {t.output_files}")
+    elif action == "show":
+        if not name:
+            typer.echo("Specify a template name", err=True)
+            raise typer.Exit(1)
+        from capture_tui.tutorial.templates import get_template
+        t = get_template(name)
+        typer.echo(f"Template: {t.name}")
+        typer.echo(f"Output files: {t.output_files}")
+    else:
+        typer.echo(f"Unknown action: {action}", err=True)
+        raise typer.Exit(1)

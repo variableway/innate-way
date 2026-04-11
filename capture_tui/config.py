@@ -59,6 +59,21 @@ class SessionConfig:
 
 
 @dataclass
+class TutorialConfig:
+    """Tutorial generator配置"""
+    output_dir: str = "./output/tutorials"
+    default_template: str = "md_script"
+    claude_enabled: bool = True
+    review_enabled: bool = False
+    max_workers: int = 4
+    retry_max: int = 3
+    retry_backoff: float = 2.0
+    fetch_timeout: int = 30
+    user_agent: str = "InnateTutorialGenerator/1.0"
+    queue_dir: str = ""  # defaults to {output_dir}/.tutorial
+
+
+@dataclass
 class Config:
     """全局配置"""
     version: str = "1.0"
@@ -67,6 +82,7 @@ class Config:
     ai: AIConfig = field(default_factory=AIConfig)
     export: ExportConfig = field(default_factory=ExportConfig)
     session: SessionConfig = field(default_factory=SessionConfig)
+    tutorial: TutorialConfig = field(default_factory=TutorialConfig)
     
     @classmethod
     def load(cls, path: Optional[str] = None) -> "Config":
@@ -126,7 +142,8 @@ class Config:
                 formats=data.get("export", {}).get("formats", ["md", "csv", "json"]),
                 feishu=FeishuConfig(**data.get("export", {}).get("feishu", {}))
             ),
-            session=SessionConfig(**data.get("session", {}))
+            session=SessionConfig(**data.get("session", {})),
+            tutorial=TutorialConfig(**data.get("tutorial", {}))
         )
     
     def to_dict(self) -> dict:
@@ -140,7 +157,8 @@ class Config:
                 "formats": self.export.formats,
                 "feishu": asdict(self.export.feishu)
             },
-            "session": asdict(self.session)
+            "session": asdict(self.session),
+            "tutorial": asdict(self.tutorial)
         }
     
     def save(self, path: str):
