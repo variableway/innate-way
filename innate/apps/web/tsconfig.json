@@ -1,0 +1,21 @@
+{
+  "extends": "../../packages/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./lib/*"],
+      "@innate/ui": ["../../packages/ui"],
+      "@innate/ui/*": ["../../packages/ui/*"],
+      "@innate/core": ["../../packages/core"],
+      "@innate/core/*": ["../../packages/core/*"],
+      "@innate/views": ["../../packages/views"],
+      "@innate/views/*": ["../../packages/views/*"]
+    },
+    "allowJs": true,
+    "noEmit": true,
+    "incremental": true,
+    "jsx": "preserve"
+  },
+  "include": ["**/*.ts", "**/*.tsx", "next-env.d.ts", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

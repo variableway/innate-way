@@ -1,0 +1,19 @@
+{
+  "extends": "../../packages/tsconfig/vite.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@innate/ui": ["../../packages/ui"],
+      "@innate/ui/*": ["../../packages/ui/*"],
+      "@innate/core": ["../../packages/core"],
+      "@innate/core/*": ["../../packages/core/*"],
+      "@innate/views": ["../../packages/views"],
+      "@innate/views/*": ["../../packages/views/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -20,12 +20,12 @@ Go rewrite of the capture tool. Same core features — add ideas, manage categor
 - **Role**: Performance-oriented CLI alternative to the Python version
 - **Status**: In development
 
-### 3. `spark/` — AI Assistant Desktop + Web App
+### 3. `innate/` — AI Assistant Desktop + Web App
 
 Full-featured AI assistant with desktop app (Tauri v2) and web app (Next.js). Monorepo with shared packages for UI, business logic, and views.
 
 - **Stack**: Tauri v2 + Next.js 16 + React 19 + Rust + Vite + shadcn/ui + Tailwind v4
-- **Packages**: `@spark/ui` (components), `@spark/core` (logic + Platform Bridge), `@spark/views` (shared pages)
+- **Packages**: `@innate/ui` (components), `@innate/core` (logic + Platform Bridge), `@innate/views` (shared pages)
 - **Features**: Ideas inbox, task kanban, agent runtime, memory system, MCP tools, terminal, skills, Feishu integration
 - **Role**: The main application — desktop + web frontend for the entire system
 - **Status**: Scaffold complete, building features
@@ -46,9 +46,9 @@ User Input
     ├── Terminal ──▶ capture/ (Python) or capture-tui-go/ (Go)
     │                      │
     │                      ▼
-    ├── Desktop ───▶ client/ (Capture-only) or spark/ (Full AI Assistant)
+    ├── Desktop ───▶ client/ (Capture-only) or innate/ (Full AI Assistant)
     │                      │
-    └── Browser ───▶ spark/ (Web version)
+    └── Browser ───▶ innate/ (Web version)
                            │
                            ├── Ideas → Tasks → Agent Execution
                            ├── Memory (cross-session persistence)

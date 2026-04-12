@@ -1,0 +1,17 @@
+{
+  "name": "@innate/views",
+  "version": "0.0.1",
+  "private": true,
+  "exports": {
+    "./*": "./views/*/index.tsx"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "@innate/ui": "workspace:*",
+    "@innate/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "typescript": "^5.8.0"
+  }
+}
