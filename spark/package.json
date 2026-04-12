@@ -1,0 +1,19 @@
+{
+  "name": "spark",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "dev:web": "pnpm --filter @spark/web dev",
+    "dev:desktop": "pnpm --filter @spark/desktop tauri dev",
+    "build:web": "pnpm --filter @spark/web build",
+    "build:desktop": "pnpm --filter @spark/desktop tauri build"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.8.0"
+  }
+}
