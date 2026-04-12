@@ -1,0 +1,45 @@
+[submodule "Aperant"]
+	path = Aperant
+	url = https://github.com/AndyMik90/Aperant.git
+[submodule "Archon"]
+	path = Archon
+	url = https://github.com/coleam00/Archon.git
+[submodule "ClawX"]
+	path = ClawX
+	url = https://github.com/ValueCell-ai/ClawX.git
+[submodule "LobsterAI"]
+	path = LobsterAI
+	url = https://github.com/netease-youdao/LobsterAI.git
+[submodule "agtx"]
+	path = agtx
+	url = https://github.com/fynnfluegge/agtx.git
+[submodule "gitbutler"]
+	path = gitbutler
+	url = https://github.com/gitbutlerapp/gitbutler.git
+[submodule "hermes-agent"]
+	path = hermes-agent
+	url = https://github.com/NousResearch/hermes-agent.git
+[submodule "letta"]
+	path = letta
+	url = https://github.com/letta-ai/letta.git
+[submodule "multica"]
+	path = multica
+	url = https://github.com/multica-ai/multica.git
+[submodule "openase"]
+	path = openase
+	url = https://github.com/PacificStudio/openase.git
+[submodule "openyak"]
+	path = openyak
+	url = https://github.com/openyak/openyak.git
+[submodule "pi-mono"]
+	path = pi-mono
+	url = https://github.com/badlogic/pi-mono.git
+[submodule "ralph-claude-code"]
+	path = ralph-claude-code
+	url = https://github.com/frankbria/ralph-claude-code.git
+[submodule "rivonclaw"]
+	path = rivonclaw
+	url = https://github.com/gaoyangz77/rivonclaw.git
+[submodule "yakAgent"]
+	path = yakAgent
+	url = https://github.com/openyak/yakAgent.git

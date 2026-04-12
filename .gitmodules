@@ -1,0 +1,3 @@
+[submodule "innate-desktop-reference/holaboss-ai"]
+	path = innate-desktop-reference/holaboss-ai
+	url = https://github.com/holaboss-ai/holaboss-ai.git
